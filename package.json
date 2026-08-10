@@ -1,7 +1,7 @@
 {
   "name": "text-compare",
   "version": "1.0.0",
-  "description": "text-compare.com 風の2テキスト差分比較ツール（クライアントサイド完結・Cloudflare Pages 向け）",
+  "description": "A text-compare.com-style two-text diff comparison tool (fully client-side, built for Cloudflare Pages)",
   "private": true,
   "scripts": {
     "dev": "http-server public -p 8080 -c-1",

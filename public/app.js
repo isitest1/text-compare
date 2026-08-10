@@ -7,6 +7,7 @@
   const swapBtn = document.getElementById("swapBtn");
   const clearBtn = document.getElementById("clearBtn");
   const ignoreWhitespace = document.getElementById("ignoreWhitespace");
+  const wrapLines = document.getElementById("wrapLines");
 
   const summary = document.getElementById("summary");
   const addedCount = document.getElementById("addedCount");
@@ -14,8 +15,7 @@
   const changedCount = document.getElementById("changedCount");
 
   const diffArea = document.getElementById("diffArea");
-  const leftDiff = document.getElementById("leftDiff");
-  const rightDiff = document.getElementById("rightDiff");
+  const diffGrid = document.getElementById("diffGrid");
 
   function splitLines(value) {
     const lines = value.split("\n");
@@ -62,20 +62,18 @@
             if (l !== undefined && r !== undefined) {
               // diffWords relies on \w word boundaries and cannot split
               // CJK text (no spaces), so it marks whole lines as one
-              // token. diffChars gives meaningful inline highlights for
-              // Japanese text, which is this tool's primary use case.
+              // token. diffChars gives meaningful inline highlights
+              // regardless of the script being compared.
               const charDiff = Diff.diffChars(l, r, { ignoreCase: false });
               leftRows.push({
                 type: "changed",
                 num: leftLineNum++,
                 wordParts: charDiff.filter((p) => !p.added),
-                side: "left",
               });
               rightRows.push({
                 type: "changed",
                 num: rightLineNum++,
                 wordParts: charDiff.filter((p) => !p.removed),
-                side: "right",
               });
               changed++;
             } else if (l !== undefined) {
@@ -121,32 +119,51 @@
         container.appendChild(span);
       }
     } else if (row.text !== undefined) {
-      container.textContent = row.text.length ? row.text : " ";
+      container.textContent = row.text.length ? row.text : " ";
     }
   }
 
-  function renderPane(target, rows) {
-    target.textContent = "";
+  // Both sides are rendered as one CSS grid (num/content columns per
+  // side, one grid row per line index) instead of two independent
+  // scrolling panes. A CSS grid row's height is shared by every cell
+  // in that row, so wrapped content on either side automatically
+  // keeps the two sides vertically in sync.
+  function renderGrid(leftRows, rightRows) {
+    const headers = diffGrid.querySelectorAll(".diff-grid-header");
+    diffGrid.textContent = "";
+    headers.forEach((h) => diffGrid.appendChild(h));
+
     const fragment = document.createDocumentFragment();
+    const max = Math.max(leftRows.length, rightRows.length);
 
-    for (const row of rows) {
-      const line = document.createElement("div");
-      line.className = "diff-line type-" + row.type;
+    for (let i = 0; i < max; i++) {
+      const l = leftRows[i] || { type: "empty" };
+      const r = rightRows[i] || { type: "empty" };
 
-      const num = document.createElement("span");
-      num.className = "line-num";
-      num.textContent = row.num !== undefined ? String(row.num) : "";
-      line.appendChild(num);
-
-      const content = document.createElement("span");
-      content.className = "line-content";
-      renderLineContent(content, row);
-      line.appendChild(content);
-
-      fragment.appendChild(line);
+      fragment.appendChild(buildCell(l, "num", "cell-left-num"));
+      fragment.appendChild(buildCell(l, "content", "cell-left-content"));
+      fragment.appendChild(buildCell(r, "num", "cell-right-num"));
+      fragment.appendChild(buildCell(r, "content", "cell-right-content"));
     }
 
-    target.appendChild(fragment);
+    diffGrid.appendChild(fragment);
+  }
+
+  function buildCell(row, kind, extraClass) {
+    const cell = document.createElement("div");
+    cell.className = "diff-cell " + kind + " type-" + row.type + " " + extraClass;
+    if (kind === "num") {
+      cell.textContent = row.num !== undefined ? String(row.num) : "";
+    } else {
+      renderLineContent(cell, row);
+    }
+    return cell;
+  }
+
+  function clearGrid() {
+    const headers = diffGrid.querySelectorAll(".diff-grid-header");
+    diffGrid.textContent = "";
+    headers.forEach((h) => diffGrid.appendChild(h));
   }
 
   function compare() {
@@ -156,8 +173,7 @@
 
     const { leftRows, rightRows, stats } = computeDiff(leftText, rightText, ignoreWs);
 
-    renderPane(leftDiff, leftRows);
-    renderPane(rightDiff, rightRows);
+    renderGrid(leftRows, rightRows);
 
     addedCount.textContent = String(stats.added);
     removedCount.textContent = String(stats.removed);
@@ -182,14 +198,17 @@
     rightInput.value = "";
     summary.hidden = true;
     diffArea.hidden = true;
-    leftDiff.textContent = "";
-    rightDiff.textContent = "";
+    clearGrid();
     leftInput.focus();
   }
 
   compareBtn.addEventListener("click", compare);
   swapBtn.addEventListener("click", swap);
   clearBtn.addEventListener("click", clearAll);
+
+  wrapLines.addEventListener("change", () => {
+    diffGrid.classList.toggle("nowrap", !wrapLines.checked);
+  });
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {

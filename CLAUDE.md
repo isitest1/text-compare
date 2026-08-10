@@ -1,73 +1,74 @@
-# CLAUDE.md — text-compare（テキスト差分比較ツール）
+# CLAUDE.md — text-compare (Text Diff Comparison Tool)
 
-このファイルは、Claude Code がこのリポジトリで作業するときの指示書です。アプリ本体はまだ存在しません。この指示書に従って、あなた（Claude Code）が一から実装してください。
+This file documents how Claude Code should work on this repository. The app itself already exists under `public/`; use this file as the source of truth for scope and conventions when making further changes.
 
-## 1. プロジェクトの目的
+## 1. Project purpose
 
-`https://text-compare.com/` と同等の、2つのテキストの差分を比較するWebツールをCloudflare上で公開します。左右2カラムにテキストを貼り付け、追加・削除・変更された箇所をハイライト表示します。
+A web tool, equivalent to `https://text-compare.com/`, for comparing two blocks of text and publishing it on Cloudflare. Text is pasted into two side-by-side columns, and additions, deletions, and changes are highlighted.
 
-## 2. 重要な前提
+## 2. Key constraints
 
-- 差分計算はすべてブラウザー内（クライアントサイド）で行います。入力テキストはサーバーに送信・保存しません。
-- バックエンドは持ちません。静的サイトとして Cloudflare Pages にデプロイします。
-- 開発は devcontainer 内で行います。
+- Diffing runs entirely in the browser (client-side). Input text is never sent to or stored on a server.
+- No backend. Deployed as a static site to Cloudflare Pages.
+- Development happens inside the devcontainer.
 
-## 3. 技術構成
+## 3. Tech stack
 
-- HTML / CSS / 素の JavaScript（フレームワークなし）
-- 差分ライブラリ：jsdiff（npmパッケージ名 `diff`）。CDN（jsDelivr）から読み込みます。
-- ホスティング：Cloudflare Pages（公開ディレクトリは `public/`）
-- ローカル確認：`http-server`
-- デプロイ：`wrangler`
+- HTML / CSS / vanilla JavaScript (no framework)
+- Diff library: jsdiff (npm package `diff`), loaded from a CDN (jsDelivr)
+- Hosting: Cloudflare Pages (publish directory is `public/`) — optional; GitHub Pages is also used for a quick public preview (see `SETUP.md`)
+- Local preview: `http-server`
+- Deploy: `wrangler`
 
-## 4. これから作るファイル
-
-以下を新規に作成してください（`public/` 配下がアプリ本体です）。
+## 4. File layout
 
 ```
 text-compare/
-├── CLAUDE.md          ← 既存（この指示書）
-├── SETUP.md           ← 既存
-├── README.md          ← 既存
-├── package.json       ← 既存
-├── wrangler.toml      ← 既存
-├── .gitignore         ← 既存
+├── CLAUDE.md
+├── SETUP.md
+├── README.md
+├── package.json
+├── wrangler.toml
+├── .gitignore
 ├── .devcontainer/
-│   └── devcontainer.json  ← 既存
-└── public/            ← ★これから作成
+│   └── devcontainer.json
+└── public/
     ├── index.html
     ├── styles.css
     └── app.js
 ```
 
-## 5. 実装する機能・差分表示の仕様
+## 5. Features / diff display spec
 
-- 左右2カラムの入力欄（変更前・変更後）を用意します。
-- 行単位で `Diff.diffLines` により差分を取得します。
-- 削除行の直後に追加行が続く場合は「変更行」とみなし、`Diff.diffWords` で単語単位のインライン差分を左右に表示します。
-- 追加行は緑、削除行は赤、変更部分は行内でさらに濃い色でハイライトします。
-- 左右それぞれに行番号を表示します。
-- 上部に追加・削除・変更の行数を集計表示します。
-- 「比較する」「左右を入れ替え」「クリア」「前後の空白を無視」の各操作を用意します。
-- `Ctrl`（Mac は `Cmd`）＋ `Enter` で比較を実行します。
-- 画面は日本語表記とし、「入力内容は外部に送信されない」旨をフッターに明記します。
-- レスポンシブ対応（狭い画面では入力欄を縦積み）にします。
+- Two side-by-side input columns (Before / After).
+- Line-level diff via `Diff.diffLines`.
+- When a removed line is immediately followed by an added line, treat the pair as a "changed" line and show an inline diff.
+  - Use `Diff.diffChars`, not `Diff.diffWords`, for the inline diff — `diffWords` relies on `\w` word boundaries and cannot tokenize scripts without spaces (e.g. CJK text), so it ends up marking the entire line as changed instead of the actual differing span. `diffChars` produces meaningful highlights regardless of script.
+- Added lines are green, removed lines are red, and the inline-changed span within a line gets a further, stronger highlight.
+- Line numbers are shown on both sides.
+- Added/removed/changed line counts are summarized above the diff.
+- Provide "Compare", "Swap Sides", "Clear", and "Ignore leading/trailing whitespace" controls, plus a "Wrap long lines" toggle.
+- `Ctrl` (`Cmd` on Mac) + `Enter` runs the comparison.
+- UI copy is in English; the footer states plainly that input is never sent externally.
+- Both sides render inside a single CSS grid (line-number and content columns per side, one grid row per line index) rather than two independently-scrolling panes. This is what keeps the two sides vertically aligned even when a long line wraps — a CSS grid row's height is shared by every cell in that row. Don't reintroduce two separate scrolling containers for the diff view; that reopens the alignment bug.
+- The page uses the full viewport width — no fixed `max-width` centering that leaves large empty side margins.
+- Responsive: on narrow screens, the input textareas stack vertically.
 
-## 6. 開発コマンド
+## 6. Dev commands
 
-- ローカル起動：`npm run dev`（`http://localhost:8080`）
-- デプロイ：`npm run deploy`（`wrangler pages deploy public`）
+- Local: `npm run dev` (`http://localhost:8080`)
+- Deploy: `npm run deploy` (`wrangler pages deploy public`)
 
-## 7. Git 運用（重要）
+## 7. Git workflow (important)
 
-- コミットとプッシュは、こちらの明示的な指示を待たずに、区切りのよいタイミングで自発的に実行してください。
-- 初回は GitHub の**プライベートリポジトリ**を作成し、リモートに接続したうえでプッシュしてください。
-  - 例：`gh repo create text-compare --private --source=. --remote=origin --push`
-- コミットメッセージは日本語で、変更内容が分かるように簡潔に書いてください。
-- 機密情報（トークン、`.dev.vars` など）はコミットしないでください。`.gitignore` を守ってください。
+- Commit and push proactively at sensible checkpoints, without waiting for explicit instruction each time.
+- The GitHub repository is **public** (`gh repo create text-compare --public --source=. --remote=origin --push`).
+- Write commit messages in English, concise and descriptive of the actual change.
+- Never commit secrets (tokens, `.dev.vars`, etc.) — respect `.gitignore`.
+- A `gh-pages` branch (containing only the built contents of `public/`) is published via GitHub Pages at `https://isitest1.github.io/text-compare/` for a quick public preview. When `public/` changes, mirror the update into `gh-pages` (see `SETUP.md`) so the live preview doesn't go stale.
 
-## 8. やらないこと
+## 8. Out of scope
 
-- バックエンドやデータベースの追加はしません。
-- 入力テキストを外部に送信する処理は追加しません。
-- ユーザー登録・ログイン機能は作りません。
+- No backend or database.
+- No code path that sends input text anywhere external.
+- No user accounts or login.

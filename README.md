@@ -1,28 +1,30 @@
 # Text Compare
 
-`text-compare.com` 風の、2つのテキストの差分を比較するWebツールです。左右2カラムにテキストを貼り付けると、追加・削除・変更された箇所をハイライト表示します。
+A `text-compare.com`-style web tool for comparing two blocks of text. Paste text into the two columns and additions, deletions, and changes are highlighted.
 
-アプリ本体（`public/`）は Claude Code が [CLAUDE.md](./CLAUDE.md) に従って実装します。
+## Features
 
-## 特長（実装目標）
+- Additions in green, deletions in red, and word/character-level inline highlighting for changed lines
+- Line numbers on both sides, plus a summary of added/removed/changed line counts
+- "Swap Sides", "Clear", and "Ignore leading/trailing whitespace" controls
+- Compare with `Ctrl` / `Cmd` + `Enter`
+- Diffing runs entirely in the browser — input text is never sent anywhere
+- No backend required — a static site, deployable as-is to Cloudflare Pages
 
-- 追加は緑、削除は赤、変更は行内で単語単位のインラインハイライト
-- 左右の行番号表示、追加・削除・変更の行数集計
-- 「左右を入れ替え」「クリア」「前後の空白を無視」に対応
-- `Ctrl` / `Cmd` ＋ `Enter` で比較
-- 差分計算はすべてブラウザー内で完結。入力テキストは外部に送信されません
-- バックエンド不要の静的サイト。Cloudflare Pages にそのままデプロイ可能
+## Tech stack
 
-## 技術構成
+- HTML / CSS / vanilla JavaScript
+- Diff library: jsdiff (`diff`)
+- Hosting: Cloudflare Pages (optional) and/or GitHub Pages
 
-- HTML / CSS / 素の JavaScript
-- 差分ライブラリ：jsdiff（`diff`）
-- ホスティング：Cloudflare Pages
+## Live preview
 
-## 使い方
+https://isitest1.github.io/text-compare/
 
-セットアップとデプロイの手順は [SETUP.md](./SETUP.md) を参照してください。
+## Usage
 
-## ライセンス
+See [SETUP.md](./SETUP.md) for setup and deployment instructions.
+
+## License
 
 MIT

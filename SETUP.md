@@ -1,69 +1,102 @@
-# SETUP.md — セットアップ手順書
+# SETUP.md — Setup Guide
 
-このドキュメントは、`text-compare` を devcontainer で開発し、Cloudflare Pages に公開するまでの手順をまとめたものです。アプリ本体は Claude Code が CLAUDE.md に従って作成します。
+This document walks through developing `text-compare` in the devcontainer and publishing it.
 
-## 前提
+## Prerequisites
 
-- Docker Desktop がインストール済みであること
-- Visual Studio Code と「Dev Containers」拡張機能がインストール済みであること
-- Cloudflare アカウントを持っていること
-- GitHub アカウントを持っていること
+- Docker Desktop installed
+- Visual Studio Code with the "Dev Containers" extension installed
+- A GitHub account
+- (Optional) A Cloudflare account, if you want to deploy to Cloudflare Pages
 
-## 1. devcontainer で開く
+## 1. Open in the devcontainer
 
-1. このフォルダーを VS Code で開きます。
-2. コマンドパレット（`F1`）から「Dev Containers: Reopen in Container」を選びます。
-3. コンテナーのビルドが終わると、`postCreateCommand` により `wrangler`・`http-server` と依存関係が自動でインストールされます。
+1. Open this folder in VS Code.
+2. From the command palette (`F1`), choose "Dev Containers: Reopen in Container".
+3. Once the container finishes building, `postCreateCommand` installs `wrangler`, `http-server`, and the project dependencies automatically.
 
-## 2. アプリの実装
+## 2. App implementation
 
-Claude Code に CLAUDE.md の内容を実装してもらいます。`public/index.html`・`public/styles.css`・`public/app.js` が生成されます。
+The app lives under `public/` (`index.html`, `styles.css`, `app.js`).
 
-## 3. ローカルで動作確認
+## 3. Run locally
 
 ```bash
 npm run dev
 ```
 
-ブラウザーで `http://localhost:8080` を開き、左右にテキストを貼り付けて「比較する」を押すと、差分がハイライト表示されます。
+Open `http://localhost:8080` in a browser, paste text into both columns, and click "Compare" to see the highlighted diff.
 
-## 4. GitHub プライベートリポジトリの作成
+## 4. GitHub repository
 
-devcontainer には GitHub CLI（`gh`）が入っています。認証後、次のコマンドでプライベートリポジトリを作成し、初回プッシュまで一括で行えます。
+The devcontainer includes the GitHub CLI (`gh`). After authenticating, create the repository and push in one step:
 
 ```bash
 gh auth login
-gh repo create text-compare --private --source=. --remote=origin --push
+gh repo create text-compare --public --source=. --remote=origin --push
 ```
 
-> Claude Code で開発する場合は、CLAUDE.md の指示に従い、コミット・プッシュは自発的に実行されます。
+## 5. Publishing
 
-## 5. Cloudflare Pages へのデプロイ
+### Option A: GitHub Pages (used for the current live preview)
 
-### 方法A：GitHub 連携（推奨・自動デプロイ）
+GitHub Pages can't serve a subdirectory like `public/` directly, so the contents of `public/` are published as the root of a separate `gh-pages` branch.
 
-1. Cloudflare ダッシュボード →「Workers & Pages」→「Create application」→「Pages」→「Connect to Git」。
-2. 作成した `text-compare` リポジトリを選択します。
-3. ビルド設定は次のとおりです。
+First-time setup (already done for this repo, kept here for reference):
+
+```bash
+git worktree add --orphan -b gh-pages /tmp/gh-pages-wt
+cp -r public/. /tmp/gh-pages-wt/
+cd /tmp/gh-pages-wt
+git add -A && git commit -m "Publish public/ for GitHub Pages"
+git push -u origin gh-pages
+cd -
+git worktree remove --force /tmp/gh-pages-wt
+
+gh api -X POST repos/<owner>/text-compare/pages -f "source[branch]=gh-pages" -f "source[path]=/"
+```
+
+To publish a new update after changing `public/`:
+
+```bash
+git worktree add /tmp/gh-pages-wt gh-pages
+rm -rf /tmp/gh-pages-wt/*
+cp -r public/. /tmp/gh-pages-wt/
+cd /tmp/gh-pages-wt
+git add -A && git commit -m "Update GitHub Pages build"
+git push
+cd -
+git worktree remove --force /tmp/gh-pages-wt
+```
+
+The site is served at `https://<owner>.github.io/text-compare/`.
+
+### Option B: Cloudflare Pages (optional)
+
+#### Git integration (recommended, auto-deploy)
+
+1. Cloudflare dashboard → "Workers & Pages" → "Create application" → "Pages" → "Connect to Git".
+2. Select the `text-compare` repository.
+3. Build settings:
    - Framework preset: `None`
-   - Build command: 空欄
+   - Build command: (leave empty)
    - Build output directory: `public`
-4. 「Save and Deploy」を押すと公開されます。以後は `main` への push ごとに自動デプロイされます。
+4. Click "Save and Deploy". Every push to `main` will auto-deploy afterward.
 
-### 方法B：Wrangler で直接デプロイ
+#### Direct deploy with Wrangler
 
 ```bash
 npx wrangler login
 npm run deploy
 ```
 
-初回に Cloudflare 側でプロジェクト `text-compare` が作成され、`https://text-compare.pages.dev` などのURLで公開されます。
+On first run, Cloudflare creates the `text-compare` project and publishes it at a URL like `https://text-compare.pages.dev`.
 
-## 6. カスタムドメイン（任意）
+## 6. Custom domain (optional)
 
-Cloudflare Pages のプロジェクト設定 →「Custom domains」から、任意のドメインを割り当てられます。
+From the Cloudflare Pages project settings → "Custom domains", assign any domain you own.
 
-## トラブルシューティング
+## Troubleshooting
 
-- ハイライトが表示されない場合：ネットワークが遮断されていると CDN（jsDelivr）の `diff` ライブラリが読み込めません。オフライン運用が必要な場合は `diff.min.js` をダウンロードして `public/` に置き、`index.html` の読み込み先をローカルパスに変更してください。
-- `wrangler` が認証エラーになる場合：`npx wrangler logout` 後に再度 `npx wrangler login` を実行してください。
+- **Highlighting doesn't appear**: if the network is blocked, the CDN (jsDelivr) can't load the `diff` library. For fully offline use, download `diff.min.js` into `public/` and point `index.html` at the local path instead.
+- **`wrangler` auth errors**: run `npx wrangler logout` then `npx wrangler login` again.
