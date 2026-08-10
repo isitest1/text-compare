@@ -1,0 +1,11 @@
+{
+  "name": "text-compare",
+  "version": "1.0.0",
+  "description": "text-compare.com 風の2テキスト差分比較ツール（クライアントサイド完結・Cloudflare Pages 向け）",
+  "private": true,
+  "scripts": {
+    "dev": "http-server public -p 8080 -c-1",
+    "deploy": "wrangler pages deploy public --project-name text-compare"
+  },
+  "license": "MIT"
+}

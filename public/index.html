@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Text Compare — テキスト差分比較ツール</title>
+<meta name="description" content="2つのテキストの差分をブラウザー内だけで比較する無料ツール。入力内容は外部に送信されません。" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app">
+  <header class="app-header">
+    <h1>Text Compare</h1>
+    <p class="lead">2つのテキストを貼り付けて、追加・削除・変更された箇所を比較します</p>
+  </header>
+
+  <div class="toolbar">
+    <button id="compareBtn" class="btn btn-primary" type="button">比較する</button>
+    <button id="swapBtn" class="btn" type="button">左右を入れ替え</button>
+    <button id="clearBtn" class="btn" type="button">クリア</button>
+    <label class="checkbox-label">
+      <input type="checkbox" id="ignoreWhitespace" />
+      前後の空白を無視
+    </label>
+    <span class="hint">(<kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> で比較)</span>
+  </div>
+
+  <div class="summary" id="summary" hidden>
+    <span class="stat stat-added">追加 <strong id="addedCount">0</strong> 行</span>
+    <span class="stat stat-removed">削除 <strong id="removedCount">0</strong> 行</span>
+    <span class="stat stat-changed">変更 <strong id="changedCount">0</strong> 行</span>
+  </div>
+
+  <div class="input-area">
+    <div class="pane">
+      <label for="leftInput">変更前</label>
+      <textarea id="leftInput" spellcheck="false" placeholder="ここに変更前のテキストを貼り付け"></textarea>
+    </div>
+    <div class="pane">
+      <label for="rightInput">変更後</label>
+      <textarea id="rightInput" spellcheck="false" placeholder="ここに変更後のテキストを貼り付け"></textarea>
+    </div>
+  </div>
+
+  <div class="diff-area" id="diffArea" hidden>
+    <div class="diff-pane">
+      <div class="diff-pane-header">変更前</div>
+      <div class="diff-lines" id="leftDiff"></div>
+    </div>
+    <div class="diff-pane">
+      <div class="diff-pane-header">変更後</div>
+      <div class="diff-lines" id="rightDiff"></div>
+    </div>
+  </div>
+
+  <footer class="app-footer">
+    <p>差分計算はすべてブラウザー内（クライアントサイド）で行われます。入力内容は外部のサーバーへ送信・保存されません。</p>
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/diff@5/dist/diff.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
