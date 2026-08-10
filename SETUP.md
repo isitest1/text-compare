@@ -96,6 +96,15 @@ On first run, Cloudflare creates the `text-compare` project and publishes it at 
 
 From the Cloudflare Pages project settings → "Custom domains", assign any domain you own.
 
+## 7. SEO & analytics (already configured for this repo)
+
+For reference — this is already wired up in `public/index.html`, `public/robots.txt`, and `public/sitemap.xml`; you shouldn't need to redo it unless the canonical domain changes.
+
+- **Search engine discoverability**: canonical link, Open Graph / Twitter Card tags, an OG preview image (`og-image.png`), WebApplication JSON-LD, `robots.txt`, and `sitemap.xml` are all in place and point at `https://isitest1.github.io/text-compare/`.
+- **Google Search Console**: verified via a `google-site-verification` meta tag in `index.html`. After verifying ownership in Search Console, submit `sitemap.xml` from the "Sitemaps" menu.
+- **Analytics**: Google Analytics (GA4) was considered but skipped — too much setup for what was needed. **Cloudflare Web Analytics** is used instead: a lightweight beacon script (no cookies, doesn't see the compared text) embedded near the end of `<body>`. To view stats, log into the Cloudflare dashboard → Analytics & Logs → Web Analytics. If the beacon token ever needs rotating, generate a new one from that same dashboard (Add a site → `isitest1.github.io`) and swap the `data-cf-beacon` token in `index.html`.
+- If the site ever moves to a different domain, update together: the canonical/OG/JSON-LD URLs in `index.html`, `robots.txt`, and `sitemap.xml`.
+
 ## Troubleshooting
 
 - **Highlighting doesn't appear**: if the network is blocked, the CDN (jsDelivr) can't load the `diff` library. For fully offline use, download `diff.min.js` into `public/` and point `index.html` at the local path instead.

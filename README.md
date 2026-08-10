@@ -4,18 +4,19 @@ A `text-compare.com`-style web tool for comparing two blocks of text. Paste text
 
 ## Features
 
-- Additions in green, deletions in red, and word/character-level inline highlighting for changed lines
+- Additions in green, deletions in red, and character-level inline highlighting for changed lines
 - Line numbers on both sides, plus a summary of added/removed/changed line counts
-- "Swap Sides", "Clear", and "Ignore leading/trailing whitespace" controls
+- "Swap Sides", "Clear", "Ignore leading/trailing whitespace", and "Wrap long lines" controls
+- Long lines stay perfectly aligned between the two sides whether wrapped or not
 - Compare with `Ctrl` / `Cmd` + `Enter`
-- Diffing runs entirely in the browser — input text is never sent anywhere
-- No backend required — a static site, deployable as-is to Cloudflare Pages
+- Diffing runs entirely in the browser — the text you're comparing is never sent anywhere
+- No backend required — a static site, deployable as-is to GitHub Pages or Cloudflare Pages
 
 ## Tech stack
 
 - HTML / CSS / vanilla JavaScript
 - Diff library: jsdiff (`diff`)
-- Hosting: Cloudflare Pages (optional) and/or GitHub Pages
+- Hosting: GitHub Pages (live) and/or Cloudflare Pages (optional)
 
 ## Live preview
 
