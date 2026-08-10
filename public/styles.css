@@ -238,12 +238,14 @@ kbd {
   overflow-wrap: anywhere;
 }
 
-/* "No-wrap" mode: each side scrolls horizontally on its own instead
-   of wrapping. Rows stay aligned because with no wrapping every row
-   is a single line tall on both sides. */
+/* "No-wrap" mode: long lines are clipped instead of wrapping, with no
+   scrollbar and no scroll cursor — text past the edge is simply not
+   shown. Rows stay aligned because with no wrapping every row is a
+   single line tall on both sides. */
 .diff-grid.nowrap .diff-cell.content {
   white-space: pre;
-  overflow-x: auto;
+  overflow: hidden;
+  text-overflow: clip;
 }
 
 .diff-cell.type-added {
