@@ -301,6 +301,15 @@ kbd {
   color: var(--color-muted);
 }
 
+.app-footer p + p {
+  margin-top: 4px;
+}
+
+.footer-link {
+  color: inherit;
+  text-decoration: underline;
+}
+
 @media (max-width: 768px) {
   .input-area {
     flex-direction: column;
